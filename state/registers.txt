@@ -1,0 +1,21 @@
+with open("contents.txt", "w+") as f:
+    f.write(file_contents)
+	print vocab
+	print "Writing contents!"
+	    subprocess.call('vim -c \"normal! @a\" {}'.format(edit_file), shell=True)
+	    f
+	
+vim.command("normal! iabc\x1bZZ")
+	
+print register_contents
+print file_contents
+	
+	vim.current
+	abc
+abcabc
+abcabcabc
+abcabcabcabc
+abcabcabcabcabc
+abcabcabcabcabcabc
+abcabcabcabcabcabc
+	iabcV	.l	Zq	(	abc		/Users/arkadyark/test.txt	mode	(	
