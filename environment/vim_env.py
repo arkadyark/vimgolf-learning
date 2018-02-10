@@ -1,8 +1,10 @@
 import gym
-import os
-from edblib import align
+from gym.spaces import Discrete
+from edlib import align
 from tree import get_random_challenge, get_challenge_infile, get_challenge_outfile
-import environment.utils.run_command as _run_command
+from tree import get_state
+from environment.utils.run_command import run_command
+from environment.utils.constants import REGISTERS, VOCAB
 
 class VimEnv(gym.Env):
     metadata = {'render.modes': ['human']}
@@ -11,44 +13,50 @@ class VimEnv(gym.Env):
 
     # OpenAI gym Env required functions
 
-    def __init__(self, challenge_id=None):
-        if not challenge_id:
-            challenge_id = get_random_challenge()
-        self.infile = get_challenge_infile(challenge_id)
-        self.outfile = get_challenge_outfile(challenge_id)
-        self.actions = []
-
-    def run_command(self):
-        _run_command(''.join(self.actions), VimEnv.TEMP_FILENAME)
+    def __init__(self):
+        self.action_space = Discrete(len(VOCAB))
 
     def distance(self, contents):
         return align(contents, self.outfile)['editDistance']
 
-    def get_state(self):
-        return {}
-
-    def _step(self, action):
-        self.actions.append(action)
+    def step(self, action):
+        self.actions.append(VOCAB[action])
         if len(self.actions) >= VimEnv.MAX_ACTIONS:
-            return None, -VimEnv.MAX_ACTIONS, True, {}
+            return None, -VimEnv.MAX_ACTIONS*100, True, {}
         with open(VimEnv.TEMP_FILENAME, 'w+') as f:
             f.write(self.infile)
-        self.run_command(''.join(self.actions), 'temp_infile.txt')
-        with open(VimEnv.TEMP_FILENAME, 'w+') as f:
-            contents = f.read()
-            distance = self.distance(contents)
-            if distance == 0:
-                return None, 100, True, {}
-            else:
-                return self.get_state(), -distance, False, {}
-
-    def _reset(self):
-        try:
-            os.remove(VimEnv.TEMP_FILENAME)
-        except OSError:
-            pass
-
-    def _render(self, mode='human', close=False):
-        print("Actions: {}".format(''.join(self.actions)))
+        run_command(''.join(self.actions), VimEnv.TEMP_FILENAME)
         with open(VimEnv.TEMP_FILENAME) as f:
-            print("File: {}".format(f.read()))
+            self.state = get_state()
+            distance = self.distance(self.state['contents'])
+            if distance == 0:
+                return None, 10000, True, {}
+            else:
+                return self.state, -distance, False, {}
+
+    def reset(self):
+        challenge_id = get_random_challenge()
+        self.infile = get_challenge_infile(challenge_id)
+        self.outfile = get_challenge_outfile(challenge_id)
+        self.actions = []
+        self.state = {'mode': '', 'cursor': (1, 1)}
+        with open(VimEnv.TEMP_FILENAME, 'w+') as f:
+            f.write(self.infile)
+
+        return {'contents': self.infile,
+                'registers': ['' for i in range(len(REGISTERS))],
+                'cursor': (0, 0),
+                'mode': 'n'}
+
+    def render(self, mode='human', close=False):
+        print("========= Actions ========")
+        print(''.join(self.actions))
+        print("========= File ========")
+        with open(VimEnv.TEMP_FILENAME) as f:
+            print(f.read())
+        print("========= Output File ========")
+        print(self.outfile)
+        print("========= Mode ========")
+        print(self.state['mode'])
+        print("========= Cursor ========")
+        print(self.state['cursor'])

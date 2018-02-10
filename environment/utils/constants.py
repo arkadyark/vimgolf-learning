@@ -1,2 +1,3 @@
-VOCAB = ''.join([chr(x) for x in range(127)])
-REGISTERS = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'q', 'z', '-', '.', ':', '%', '/', '"', '=']
+import string
+VOCAB = string.ascii_letters + string.digits + '!@#$%^&*(){}?+<>,.=-_ ' + '\x1b'
+REGISTERS = [chr(x) for x in range(34,122)]
