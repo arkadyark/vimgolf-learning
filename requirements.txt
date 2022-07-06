@@ -6,7 +6,7 @@ edlib==1.2.3
 future==0.16.0
 futures==3.1.1
 gym==0.9.6
-html5lib==0.9999999
+html5lib==0.999999999
 idna==2.6
 Markdown==2.6.11
 numpy==1.14.0
